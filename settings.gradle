@@ -1,0 +1,5 @@
+rootProject.name = 'protocols-benchmark'
+include 'rest'
+include 'udp'
+include 'model'
+

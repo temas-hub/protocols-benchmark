@@ -1,0 +1,41 @@
+buildscript {
+    ext.kotlin_version = '1.2.31'
+    ext.spring_boot_version = '2.0.1.RELEASE'
+
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version" // See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$spring_boot_version"
+    }
+}
+
+
+apply plugin: 'kotlin'
+apply plugin: "kotlin-spring"
+apply plugin: 'org.springframework.boot'
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile project (":model")
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "org.springframework.boot:spring-boot-starter-web:$spring_boot_version"
+    compile "org.apache.httpcomponents:httpclient:4.5.2"
+    compile "com.fasterxml.jackson.core:jackson-databind"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+"
+    compile "io.dropwizard.metrics:metrics-servlets:$metricsVer"
+}
+
+bootJar {
+    mainClassName = 'com.temas.protocols.benchmark.server.ServerApplicationKt'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}

@@ -1,0 +1,31 @@
+group = "com.temas.protocols.benchmark"
+version = "0.9"
+
+buildscript {
+    ext{
+        kotlinVer = '1.2.31'
+        metricsVer = '4.0.0'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVer"
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'kotlin'
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVer"
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVer"
+        compile "com.github.javafaker:javafaker:0.14"
+        compile "io.dropwizard.metrics:metrics-core:$metricsVer"
+    }
+
+}
