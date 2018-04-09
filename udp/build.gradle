@@ -61,7 +61,7 @@ compileTestKotlin {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'com.temas.protocols.benchmark.ServerKt'
+        attributes 'Main-Class': 'com.temas.protocols.benchmark.udp.ServerKt'
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

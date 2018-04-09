@@ -26,6 +26,7 @@ fun main(args: Array<String>) {
 object Server {
     //properties
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
+    private val WORKER_THREADS_COUNT = 10
     //val HOST = System.getProperty("udpserver", "35.231.203.51")
     val PORT = Integer.parseInt(System.getProperty("port", "11100"))
 
@@ -55,7 +56,7 @@ object Server {
         }
     }
     fun start() {
-        val workerGroup = NioEventLoopGroup(1)
+        val workerGroup = NioEventLoopGroup(WORKER_THREADS_COUNT)
         try {
             val b = Bootstrap()
             b.group(workerGroup)

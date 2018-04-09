@@ -20,7 +20,7 @@ object Client {
     // properties
     private val MAX_USER_CNT: Int = 100
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
-    private val tps = Integer.parseInt(System.getProperty("tps", "15"))
+    private val tps = Integer.parseInt(System.getProperty("tps", "30"))
     val HOST = System.getProperty("udpserver", "ec2-18-222-12-202.us-east-2.compute.amazonaws.com")
     //val HOST = System.getProperty("udpserver", "192.168.1.102")
     //val HOST = System.getProperty("udpserver", "temas-local.lan")
