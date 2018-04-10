@@ -10,6 +10,7 @@ import com.temas.protocols.benchmark.model.Generator
 import com.temas.protocols.benchmark.model.User
 import io.netty.bootstrap.AbstractBootstrap
 import io.netty.buffer.ByteBuf
+import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.EventLoopGroup
@@ -34,7 +35,9 @@ abstract class Server {
 
     private val prototype = Model.GetUsersRequest.getDefaultInstance()
 
-    protected val inboundHandler = object : ChannelInboundHandlerAdapter() {
+    protected val inboundHandler =
+            @ChannelHandler.Sharable
+            object : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             responseRequestHandlingSlidingTimer.time().use {
                 responseRequestHandlingTimer.time().use {

@@ -3,7 +3,6 @@ package com.temas.protocols.benchmark.transport
 import com.codahale.metrics.*
 import com.codahale.metrics.MetricRegistry.name
 import com.github.javafaker.Faker
-import com.google.protobuf.MessageOrBuilder
 import com.temas.protocols.benchmark.Model
 import com.temas.protocols.benchmark.model.User
 import io.netty.bootstrap.Bootstrap
@@ -11,7 +10,6 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufHolder
 import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.DatagramPacket
 import java.net.InetSocketAddress
 import java.time.LocalDate
 import java.util.concurrent.Executors
@@ -46,7 +44,7 @@ abstract class Client<T: Channel> (private val channelClass: Class<T>){
                 }
             })
     val metricsReporter = ConsoleReporter.forRegistry(metricsRegistry)
-            .convertDurationsTo(TimeUnit.MILLISECONDS).
+            .convertDurationsTo(TimeUnit.MICROSECONDS).
                     convertRatesTo(TimeUnit.SECONDS).build()
 
     val responseListener = object : ChannelInboundHandlerAdapter() {
