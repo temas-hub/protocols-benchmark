@@ -1,4 +1,4 @@
-package com.temas.protocols.benchmark.udp
+package com.temas.protocols.benchmark.transport
 
 import com.google.protobuf.MessageLite
 import com.google.protobuf.MessageOrBuilder
@@ -17,13 +17,12 @@ fun writeToChannel(channel: Channel, message: MessageOrBuilder, toAddress: InetS
     channel.writeAndFlush(DatagramPacket(payLoadBuffer, toAddress))
 }
 
-fun encodeBuf(message: MessageOrBuilder): ByteBuf? {
+fun encodeBuf(message: MessageOrBuilder): ByteBuf {
     val objectBuffer = convertToBuffer(message)
     val length = objectBuffer.readableBytes()
     val lengthBuffer = Unpooled.buffer(2)
     lengthBuffer.writeShort(length)
-    val payLoadBuffer = Unpooled.wrappedBuffer(lengthBuffer, objectBuffer)
-    return payLoadBuffer
+    return Unpooled.wrappedBuffer(lengthBuffer, objectBuffer)
 }
 
 fun<T> convertToProto(parser: com.google.protobuf.Parser<T>, msg: ByteBuf): T {

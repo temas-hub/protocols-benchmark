@@ -1,4 +1,4 @@
-package com.temas.protocols.benchmark.udp
+package com.temas.protocols.benchmark.transport
 
 import com.codahale.metrics.ConsoleReporter
 import com.codahale.metrics.MetricRegistry
@@ -8,26 +8,19 @@ import com.codahale.metrics.Timer
 import com.temas.protocols.benchmark.Model
 import com.temas.protocols.benchmark.model.Generator
 import com.temas.protocols.benchmark.model.User
-import io.netty.bootstrap.Bootstrap
+import io.netty.bootstrap.AbstractBootstrap
+import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.channel.ChannelInitializer
+import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.DatagramPacket
-import io.netty.channel.socket.nio.NioDatagramChannel
 import java.net.InetAddress
-import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 
-fun main(args: Array<String>) {
-    Server.start()
-}
 
-object Server {
+abstract class Server {
     //properties
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
-    private val WORKER_THREADS_COUNT = 10
-    //val HOST = System.getProperty("udpserver", "35.231.203.51")
     val PORT = Integer.parseInt(System.getProperty("port", "11100"))
 
     val metricsRegistry = MetricRegistry()
@@ -41,60 +34,47 @@ object Server {
 
     private val prototype = Model.GetUsersRequest.getDefaultInstance()
 
-    private val inboundHandler = object : ChannelInboundHandlerAdapter() {
+    protected val inboundHandler = object : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             responseRequestHandlingSlidingTimer.time().use {
                 responseRequestHandlingTimer.time().use {
-                    //println("${msg.javaClass}")
-                    val packet = (msg as DatagramPacket)
-                    val readObject = readObject(packet.content(), { buf -> convertToProto(prototype.parserForType, buf) })
-                    //println("Request ${readObject.count}")
-                    handleRequest(ctx, packet.sender(), readObject.count, readObject.header)
-                    msg.release()
+                    readMessage(msg, ctx)
                 }
             }
         }
     }
-    fun start() {
-        val workerGroup = NioEventLoopGroup(WORKER_THREADS_COUNT)
-        try {
-            val b = Bootstrap()
-            b.group(workerGroup)
-                    .channel(NioDatagramChannel::class.java)
-                    .handler(object : ChannelInitializer<NioDatagramChannel>() {
-                        override fun initChannel(ch : NioDatagramChannel)  {
-                            val p = ch.pipeline()
-                            p.addLast(
-                                    inboundHandler
-                            )
-                        }
-                    })
 
-            // Bind and start to accept incoming connections.
+    protected abstract fun readMessage(msg: Any, ctx: ChannelHandlerContext)
+
+    protected fun prepareResponse(request: Model.GetUsersRequest): Model.GetUsersResponse {
+        val userList = Generator.generateUsers(request.count)
+        return buildResponse(userList, request.header)
+    }
+
+    protected fun toProto(msg: ByteBuf) = convertToProto(prototype.parserForType, msg)
+
+    fun start() {
+        val bossGroup = NioEventLoopGroup(1)
+        val workerGroup = NioEventLoopGroup()
+        try {
+
+            val bootstrap = initBoostrap(bossGroup, workerGroup)
             val localHost = InetAddress.getLocalHost()
             println("Started to listen host:$localHost port: ${PORT}")
             metricsReporter.start(20, TimeUnit.SECONDS)
 
-            val channel = b.bind(PORT).sync().channel()
-            //val channel = b.bind(PORT).sync().channel()
+            // Bind and start to accept incoming connections.
+            val channel = bootstrap.bind(PORT).sync().channel()
             channel.closeFuture().sync()
         } finally {
             workerGroup.shutdownGracefully()
+            bossGroup.shutdownGracefully()
         }
     }
 
+    protected abstract fun initBoostrap(bossGroup: EventLoopGroup, workerGroup: EventLoopGroup): AbstractBootstrap<*,*>
 
-
-
-    fun handleRequest(ctx: ChannelHandlerContext, clientAddress: InetSocketAddress, numberOfRecords: Int, header: Model.Header) {
-        //TODO reliabilty
-        val userList = Generator.generateUsers(numberOfRecords)
-        val response = buildResponse(userList, header)
-        //ctx.writeAndFlush(DatagramPacket(convertToBuffer(response), clientAddress))
-        ctx.writeAndFlush(DatagramPacket(encodeBuf(response), clientAddress))
-    }
-
-    private fun buildResponse(userList: List<User>, header: Model.Header): Model.GetUsersResponse {
+    protected fun buildResponse(userList: List<User>, header: Model.Header): Model.GetUsersResponse {
         val respBuilder = Model.GetUsersResponse.newBuilder()
         // TODO
         //respBuilder.header
