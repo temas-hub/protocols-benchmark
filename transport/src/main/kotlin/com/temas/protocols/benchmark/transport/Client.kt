@@ -21,7 +21,7 @@ abstract class Client<T: Channel> (private val channelClass: Class<T>){
     private val MAX_USER_CNT: Int = 100
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
     private val tps = Integer.parseInt(System.getProperty("tps", "30"))
-    val HOST = System.getProperty("udpserver", "ec2-18-222-12-202.us-east-2.compute.amazonaws.com")
+    val HOST = System.getProperty("udpserver", "localhost")
     val PORT = Integer.parseInt(System.getProperty("udpport", "11100"))
     val remoteAddress = InetSocketAddress(HOST, PORT)
 

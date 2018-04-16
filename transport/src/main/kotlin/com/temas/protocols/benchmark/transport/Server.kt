@@ -33,7 +33,7 @@ abstract class Server {
             .convertDurationsTo(TimeUnit.MILLISECONDS)
             .build()
 
-    private val prototype = Model.GetUsersRequest.getDefaultInstance()
+    protected val prototype = Model.GetUsersRequest.getDefaultInstance()
 
     protected val inboundHandler =
             @ChannelHandler.Sharable
@@ -63,7 +63,7 @@ abstract class Server {
 
             val bootstrap = initBoostrap(bossGroup, workerGroup)
             val localHost = InetAddress.getLocalHost()
-            println("Started to listen host:$localHost port: ${PORT}")
+            println("Started to listen host:$localHost port: $PORT")
             metricsReporter.start(20, TimeUnit.SECONDS)
 
             // Bind and start to accept incoming connections.

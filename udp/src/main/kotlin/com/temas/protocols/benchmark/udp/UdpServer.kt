@@ -1,7 +1,5 @@
 package com.temas.protocols.benchmark.udp
 
-import com.temas.protocols.benchmark.Model
-import com.temas.protocols.benchmark.model.Generator
 import com.temas.protocols.benchmark.transport.Server
 import com.temas.protocols.benchmark.transport.encodeBuf
 import com.temas.protocols.benchmark.transport.readObject
@@ -16,6 +14,12 @@ import io.netty.channel.socket.nio.NioDatagramChannel
 
 object UdpServer: Server(){
 
+    /** The correct way to build protobuf pipeline is to split logic among several
+    inbound and outbound event handlers(see commented lines).
+    But for evaluation purposes I combined all this logic into a single event handler.
+    This why it is easy to measure how long it takes to read the request and
+    build the response
+     */
     override fun initBoostrap(bossGroup: EventLoopGroup, workerGroup: EventLoopGroup): AbstractBootstrap<*,*> {
         val b = Bootstrap()
         b.group(workerGroup)
@@ -23,6 +27,12 @@ object UdpServer: Server(){
                 .handler(object : ChannelInitializer<NioDatagramChannel>() {
                     override fun initChannel(ch : NioDatagramChannel)  {
                         val p = ch.pipeline()
+//                        p.addLast(ProtobufVarint32FrameDecoder())
+//                        p.addLast(ProtobufDecoder(prototype))
+//
+//                        p.addLast(ProtobufVarint32LengthFieldPrepender())
+//                        p.addLast(ProtobufEncoder())
+
                         p.addLast(inboundHandler)
                     }
                 })
