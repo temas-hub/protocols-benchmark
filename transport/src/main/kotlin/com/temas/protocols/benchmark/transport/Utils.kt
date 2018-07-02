@@ -19,10 +19,11 @@ fun writeToChannel(channel: Channel, message: MessageOrBuilder, toAddress: InetS
 
 fun encodeBuf(message: MessageOrBuilder): ByteBuf {
     val objectBuffer = convertToBuffer(message)
-    val length = objectBuffer.readableBytes()
-    val lengthBuffer = Unpooled.buffer(2)
-    lengthBuffer.writeShort(length)
-    return Unpooled.wrappedBuffer(lengthBuffer, objectBuffer)
+    //val length = objectBuffer.readableBytes()
+    //val lengthBuffer = Unpooled.buffer(2)
+    //lengthBuffer.writeShort(length)
+    //return Unpooled.wrappedBuffer(lengthBuffer, objectBuffer)
+    return objectBuffer;
 }
 
 fun<T> convertToProto(parser: com.google.protobuf.Parser<T>, msg: ByteBuf): T {
@@ -42,16 +43,16 @@ fun<T> convertToProto(parser: com.google.protobuf.Parser<T>, msg: ByteBuf): T {
 }
 
 fun<T> readObject(buffer: ByteBuf, decoder: (objBuffer: ByteBuf) -> T): T {
-    var length: Int
-    if (buffer.readableBytes() > 2) {
-        length = buffer.readUnsignedShort()
-    } else {
-        throw IllegalStateException("Expected 2 bytes length header, but found ${buffer.readableBytes()}")
-    }
-    val objBuffer = buffer.readSlice(length)
+//    var length: Int
+//    if (buffer.readableBytes() > 2) {
+//        length = buffer.readUnsignedShort()
+//    } else {
+//        throw IllegalStateException("Expected 2 bytes length header, but found ${buffer.readableBytes()}")
+//    }
+//    val objBuffer = buffer.readSlice(length)
 
     try {
-        return decoder.invoke(objBuffer)
+        return decoder.invoke(buffer)
     } catch (e: Exception) {
         throw RuntimeException(e)
     }
