@@ -96,7 +96,7 @@ abstract class Server {
             Timer(SlidingTimeWindowArrayReservoir(METRICS_SLIDING_WINDOW_SEC, TimeUnit.SECONDS)))
     var metricsReporter = ConsoleReporter.forRegistry(metricsRegistry)
             .convertRatesTo(TimeUnit.SECONDS)
-            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .convertDurationsTo(TimeUnit.MICROSECONDS)
             .build()
     //<<<< benchmark
 }

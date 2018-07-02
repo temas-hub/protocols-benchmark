@@ -39,13 +39,6 @@ object SctpServer: Server() {
                 })
         return b
     }
-//    override fun readMessage(msg: Any, ctx: ChannelHandlerContext) {
-//        val packet = (msg as SctpMessage)
-//        val request = readObject(packet.content(), ::toProto)
-//        val response = prepareResponse(request)
-//        ctx.writeAndFlush(SctpMessage(0,0, encodeBuf(response)))
-//        msg.release()
-//    }
 }
 
 
