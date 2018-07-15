@@ -3,29 +3,36 @@ version = "0.9"
 
 buildscript {
     ext{
-        kotlinVer = '1.2.31'
+        kotlin_version = '1.2.51'
         metricsVer = '4.0.0'
     }
     repositories {
+        google()
+        jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVer"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:3.1.3'
     }
 }
-
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'kotlin'
     repositories {
+        google()
+        jcenter()
         mavenCentral()
     }
 
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVer"
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVer"
-        compile "com.github.javafaker:javafaker:0.14"
-        compile "io.dropwizard.metrics:metrics-core:$metricsVer"
+    if (it.name != 'streamclient') {
+        apply plugin: 'java'
+        apply plugin: 'kotlin'
+
+        dependencies {
+            compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+            compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+            compile "com.github.javafaker:javafaker:0.14"
+            compile "io.dropwizard.metrics:metrics-core:$metricsVer"
+        }
     }
 
 }
