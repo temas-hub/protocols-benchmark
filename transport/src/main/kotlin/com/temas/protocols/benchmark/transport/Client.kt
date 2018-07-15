@@ -16,27 +16,30 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-abstract class Client<T: Channel> (protected val channelClass: Class<T>){
+abstract class Client<T: Channel> (protected val channelClass: Class<T>,
+                                   protected val host: String = System.getProperty("server", defaultHost),
+                                   protected val port: Int = Integer.parseInt(System.getProperty("port", defaultPort.toString()))){
+    companion object {
+        const val defaultHost = "localhost"
+        const val defaultPort = 11100
+    }
     // properties
     private val MAX_USER_CNT: Int = 100
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
     private val tps = Integer.parseInt(System.getProperty("tps", "30"))
     private val prototype = Model.GetUsersResponse.getDefaultInstance()
-    private val HOST = System.getProperty("server", "localhost")
-    private val PORT = Integer.parseInt(System.getProperty("port", "11100"))
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private val group = buildEventLoopGroup()
     private val faker = Faker()
 
-    protected val remoteAddress = InetSocketAddress(HOST, PORT)
-
+    protected val remoteAddress = getRemoteAddress(host, port);
 
     protected open fun buildEventLoopGroup() = NioEventLoopGroup()
 
     protected abstract fun appendLowerProtocolHandlers(p : ChannelPipeline)
 
 
-    protected open fun initBootstap(): Bootstrap {
+    protected open fun initBootstap(host: String, port: Int): Bootstrap {
         val b = Bootstrap()
         return b.group(group)
                 .channel(channelClass)
@@ -50,6 +53,10 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>){
                         pipeline.addLast(responseListener)
                     }
                 })
+    }
+
+    private fun getRemoteAddress(host: String, port: Int): InetSocketAddress {
+        return InetSocketAddress(host, port)
     }
 
     val responseListener = object : ChannelInboundHandlerAdapter() {
@@ -68,11 +75,11 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>){
     fun init() {
         // Start the connection attempt.
         try {
-            val bootstrap = initBootstap();
+            val bootstrap = initBootstap(host, port);
             val channelFuture = bootstrap.connect()
             channelFuture.addListener({ future ->
                 if (!future.isSuccess) {
-                    println("Error connecting to ${HOST} ${PORT}")
+                    println("Error connecting to ${host} ${port}")
                 }
             })
             val reqestId = AtomicLong(0)
@@ -80,7 +87,7 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>){
             executor.scheduleAtFixedRate({
                 sendRequest(reqestId, channel, remoteAddress)
             }, 0, (1f/ tps.toFloat() * 1000).toLong(), TimeUnit.MILLISECONDS)
-            println("Client started to send requests to ${HOST}:${PORT} with reqested tps=${tps}")
+            println("Client started to send requests to ${host}:${port} with reqested tps=${tps}")
             metricsReporter.start(15, TimeUnit.SECONDS)
 
         } catch(e: Exception) {

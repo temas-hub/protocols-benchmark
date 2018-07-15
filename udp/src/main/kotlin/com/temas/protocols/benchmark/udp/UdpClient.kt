@@ -5,9 +5,10 @@ import io.netty.buffer.ByteBuf
 import io.netty.channel.*
 import io.netty.channel.socket.DatagramPacket
 import io.netty.channel.socket.nio.NioDatagramChannel
-import java.net.InetSocketAddress
 
-object UdpClient : Client<NioDatagramChannel>(NioDatagramChannel::class.java) {
+class UdpClient : Client<NioDatagramChannel> {
+    constructor(host: String, port: Int) : super(NioDatagramChannel::class.java, host, port)
+    constructor(): super(NioDatagramChannel::class.java)
 
     override fun appendLowerProtocolHandlers(p : ChannelPipeline) {
         p.addLast("datagramReader", object: ChannelInboundHandlerAdapter() {
@@ -24,5 +25,5 @@ object UdpClient : Client<NioDatagramChannel>(NioDatagramChannel::class.java) {
 }
 
 fun main(args: Array<String>) {
-    UdpClient.init()
+    UdpClient().init()
 }

@@ -8,13 +8,17 @@ android {
 
     defaultConfig {
         applicationId "benchmark.protocol.temas.com.streamclient"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
     }
 
     buildTypes {
@@ -27,6 +31,7 @@ android {
 }
 
 dependencies {
+    compile project(":udp")
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile fileTree(dir: 'libs', include: ['*.jar'])
