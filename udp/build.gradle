@@ -1,11 +1,27 @@
+apply plugin: 'maven-publish'
+
 dependencies {
     compile project (":model")
     compile project (":transport")
 }
 
-//jar {
-//    manifest {
-//        attributes 'Main-Class': 'com.temas.protocols.benchmark.udp.UdpServerKt'
-//    }
-//    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-//}
+task depJar(type: Jar) {
+    from sourceSets.main.output
+    from configurations.runtimeClasspath
+            .filter { !it.toString().contains('stdlib') } //no kotlin libs
+            .collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+
+
+publishing {
+    publications {
+        udp(MavenPublication) {
+            groupId 'com.temas.protocols.benchmark.transport'
+            artifactId 'udp'
+            version '0.9'
+            artifact(depJar)
+        }
+    }
+
+}
