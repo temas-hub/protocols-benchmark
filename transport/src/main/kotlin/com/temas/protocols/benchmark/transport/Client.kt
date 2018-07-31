@@ -32,14 +32,12 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
     private val group = buildEventLoopGroup()
     private val faker = Faker()
 
-    protected val remoteAddress = getRemoteAddress(host, port);
-
     protected open fun buildEventLoopGroup() = NioEventLoopGroup()
 
     protected abstract fun appendLowerProtocolHandlers(p : ChannelPipeline)
 
 
-    protected open fun initBootstap(host: String, port: Int): Bootstrap {
+    protected open fun initBootstap(remoteAddress: InetSocketAddress): Bootstrap {
         val b = Bootstrap()
         return b.group(group)
                 .channel(channelClass)
@@ -55,7 +53,7 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
                 })
     }
 
-    private fun getRemoteAddress(host: String, port: Int): InetSocketAddress {
+    protected fun getRemoteAddress(host: String, port: Int): InetSocketAddress {
         return InetSocketAddress(host, port)
     }
 
@@ -75,7 +73,8 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
     fun init() {
         // Start the connection attempt.
         try {
-            val bootstrap = initBootstap(host, port);
+            val remoteAddress = getRemoteAddress(host, port)
+            val bootstrap = initBootstap(remoteAddress)
             val channelFuture = bootstrap.connect()
             channelFuture.addListener({ future ->
                 if (!future.isSuccess) {

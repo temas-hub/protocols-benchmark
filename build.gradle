@@ -27,7 +27,7 @@ subprojects {
 
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
         compile "com.github.javafaker:javafaker:0.14"
         compile "io.dropwizard.metrics:metrics-core:$metricsVer"
     }

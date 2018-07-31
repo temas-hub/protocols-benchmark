@@ -8,7 +8,7 @@ dependencies {
 task depJar(type: Jar) {
     from sourceSets.main.output
     from configurations.runtimeClasspath
-            .filter { !it.toString().contains('stdlib') } //no kotlin libs
+            .filter { !it.toString().contains('jetbrains') } //no kotlin libs
             .collect { it.isDirectory() ? it : zipTree(it) }
 }
 

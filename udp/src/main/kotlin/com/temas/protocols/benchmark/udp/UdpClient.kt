@@ -11,6 +11,7 @@ class UdpClient : Client<NioDatagramChannel> {
     constructor(): super(NioDatagramChannel::class.java)
 
     override fun appendLowerProtocolHandlers(p : ChannelPipeline) {
+        val remoteAddress = getRemoteAddress(host, port);
         p.addLast("datagramReader", object: ChannelInboundHandlerAdapter() {
             override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
                 ctx.fireChannelRead((msg as DatagramPacket).content())
