@@ -540,6 +540,19 @@ public final class Model {
      * <code>int32 count = 2;</code>
      */
     int getCount();
+
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    java.util.List<java.lang.Integer> getRandomDataList();
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    int getRandomDataCount();
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    int getRandomData(int index);
   }
   /**
    * Protobuf type {@code com.temas.protocols.benchmark.GetUsersRequest}
@@ -554,6 +567,7 @@ public final class Model {
     }
     private GetUsersRequest() {
       count_ = 0;
+      randomData_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -599,6 +613,27 @@ public final class Model {
               count_ = input.readInt32();
               break;
             }
+            case 24: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                randomData_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              randomData_.add(input.readInt32());
+              break;
+            }
+            case 26: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004) && input.getBytesUntilLimit() > 0) {
+                randomData_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                randomData_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -607,6 +642,9 @@ public final class Model {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          randomData_ = java.util.Collections.unmodifiableList(randomData_);
+        }
         makeExtensionsImmutable();
       }
     }
@@ -622,6 +660,7 @@ public final class Model {
               com.temas.protocols.benchmark.Model.GetUsersRequest.class, com.temas.protocols.benchmark.Model.GetUsersRequest.Builder.class);
     }
 
+    private int bitField0_;
     public static final int HEADER_FIELD_NUMBER = 1;
     private com.temas.protocols.benchmark.Model.Header header_;
     /**
@@ -652,6 +691,29 @@ public final class Model {
       return count_;
     }
 
+    public static final int RANDOMDATA_FIELD_NUMBER = 3;
+    private java.util.List<java.lang.Integer> randomData_;
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getRandomDataList() {
+      return randomData_;
+    }
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    public int getRandomDataCount() {
+      return randomData_.size();
+    }
+    /**
+     * <code>repeated int32 randomData = 3;</code>
+     */
+    public int getRandomData(int index) {
+      return randomData_.get(index);
+    }
+    private int randomDataMemoizedSerializedSize = -1;
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -664,11 +726,19 @@ public final class Model {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (header_ != null) {
         output.writeMessage(1, getHeader());
       }
       if (count_ != 0) {
         output.writeInt32(2, count_);
+      }
+      if (getRandomDataList().size() > 0) {
+        output.writeUInt32NoTag(26);
+        output.writeUInt32NoTag(randomDataMemoizedSerializedSize);
+      }
+      for (int i = 0; i < randomData_.size(); i++) {
+        output.writeInt32NoTag(randomData_.get(i));
       }
     }
 
@@ -684,6 +754,20 @@ public final class Model {
       if (count_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, count_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < randomData_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(randomData_.get(i));
+        }
+        size += dataSize;
+        if (!getRandomDataList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        randomDataMemoizedSerializedSize = dataSize;
       }
       memoizedSize = size;
       return size;
@@ -708,6 +792,8 @@ public final class Model {
       }
       result = result && (getCount()
           == other.getCount());
+      result = result && getRandomDataList()
+          .equals(other.getRandomDataList());
       return result;
     }
 
@@ -724,6 +810,10 @@ public final class Model {
       }
       hash = (37 * hash) + COUNT_FIELD_NUMBER;
       hash = (53 * hash) + getCount();
+      if (getRandomDataCount() > 0) {
+        hash = (37 * hash) + RANDOMDATA_FIELD_NUMBER;
+        hash = (53 * hash) + getRandomDataList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -861,6 +951,8 @@ public final class Model {
         }
         count_ = 0;
 
+        randomData_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -883,12 +975,20 @@ public final class Model {
 
       public com.temas.protocols.benchmark.Model.GetUsersRequest buildPartial() {
         com.temas.protocols.benchmark.Model.GetUsersRequest result = new com.temas.protocols.benchmark.Model.GetUsersRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (headerBuilder_ == null) {
           result.header_ = header_;
         } else {
           result.header_ = headerBuilder_.build();
         }
         result.count_ = count_;
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          randomData_ = java.util.Collections.unmodifiableList(randomData_);
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
+        result.randomData_ = randomData_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -936,6 +1036,16 @@ public final class Model {
         if (other.getCount() != 0) {
           setCount(other.getCount());
         }
+        if (!other.randomData_.isEmpty()) {
+          if (randomData_.isEmpty()) {
+            randomData_ = other.randomData_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensureRandomDataIsMutable();
+            randomData_.addAll(other.randomData_);
+          }
+          onChanged();
+        }
         onChanged();
         return this;
       }
@@ -961,6 +1071,7 @@ public final class Model {
         }
         return this;
       }
+      private int bitField0_;
 
       private com.temas.protocols.benchmark.Model.Header header_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
@@ -1101,6 +1212,72 @@ public final class Model {
       public Builder clearCount() {
         
         count_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> randomData_ = java.util.Collections.emptyList();
+      private void ensureRandomDataIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          randomData_ = new java.util.ArrayList<java.lang.Integer>(randomData_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getRandomDataList() {
+        return java.util.Collections.unmodifiableList(randomData_);
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public int getRandomDataCount() {
+        return randomData_.size();
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public int getRandomData(int index) {
+        return randomData_.get(index);
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public Builder setRandomData(
+          int index, int value) {
+        ensureRandomDataIsMutable();
+        randomData_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public Builder addRandomData(int value) {
+        ensureRandomDataIsMutable();
+        randomData_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public Builder addAllRandomData(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureRandomDataIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, randomData_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 randomData = 3;</code>
+       */
+      public Builder clearRandomData() {
+        randomData_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
         onChanged();
         return this;
       }
@@ -3115,15 +3292,15 @@ public final class Model {
     java.lang.String[] descriptorData = {
       "\n\013Model.proto\022\035com.temas.protocols.bench" +
       "mark\"+\n\006Header\022\016\n\006seqNum\030\001 \001(\003\022\021\n\ttimest" +
-      "amp\030\002 \001(\003\"W\n\017GetUsersRequest\0225\n\006header\030\001" +
+      "amp\030\002 \001(\003\"k\n\017GetUsersRequest\0225\n\006header\030\001" +
       " \001(\0132%.com.temas.protocols.benchmark.Hea" +
-      "der\022\r\n\005count\030\002 \001(\005\"[\n\004User\022\021\n\tfirstName\030" +
-      "\001 \001(\t\022\022\n\nsecondName\030\002 \001(\t\022\021\n\tbirthdate\030\003" +
-      " \001(\t\022\013\n\003age\030\004 \001(\005\022\014\n\004city\030\005 \001(\t\"\200\001\n\020GetU" +
-      "sersResponse\0225\n\006header\030\001 \001(\0132%.com.temas" +
-      ".protocols.benchmark.Header\0225\n\010userList\030" +
-      "\002 \003(\0132#.com.temas.protocols.benchmark.Us",
-      "erb\006proto3"
+      "der\022\r\n\005count\030\002 \001(\005\022\022\n\nrandomData\030\003 \003(\005\"[" +
+      "\n\004User\022\021\n\tfirstName\030\001 \001(\t\022\022\n\nsecondName\030" +
+      "\002 \001(\t\022\021\n\tbirthdate\030\003 \001(\t\022\013\n\003age\030\004 \001(\005\022\014\n" +
+      "\004city\030\005 \001(\t\"\200\001\n\020GetUsersResponse\0225\n\006head" +
+      "er\030\001 \001(\0132%.com.temas.protocols.benchmark" +
+      ".Header\0225\n\010userList\030\002 \003(\0132#.com.temas.pr",
+      "otocols.benchmark.Userb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3148,7 +3325,7 @@ public final class Model {
     internal_static_com_temas_protocols_benchmark_GetUsersRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_temas_protocols_benchmark_GetUsersRequest_descriptor,
-        new java.lang.String[] { "Header", "Count", });
+        new java.lang.String[] { "Header", "Count", "RandomData", });
     internal_static_com_temas_protocols_benchmark_User_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_com_temas_protocols_benchmark_User_fieldAccessorTable = new

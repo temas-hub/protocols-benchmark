@@ -33,6 +33,7 @@ object UdpServer: Server() {
                 .handler(object : ChannelInitializer<NioDatagramChannel>() {
                     override fun initChannel(ch : NioDatagramChannel)  {
                         val p = ch.pipeline()
+                        ch.config().recvByteBufAllocator = FixedRecvByteBufAllocator(5120)
                         p.addLast("recipientInitializer", recipientInitializer)
                         p.addLast("datagramReader", object: ChannelInboundHandlerAdapter() {
                             override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {

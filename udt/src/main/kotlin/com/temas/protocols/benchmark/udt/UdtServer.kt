@@ -38,6 +38,7 @@ object UdtServer: Server(){
                 .childHandler(object : ChannelInitializer<UdtChannel>() {
                     override fun initChannel(ch: UdtChannel) {
                         val p = ch.pipeline()
+                        ch.config().recvByteBufAllocator = FixedRecvByteBufAllocator(5120)
                         p.addLast("messageReader", object: ChannelInboundHandlerAdapter() {
                             override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
                                 ctx.fireChannelRead((msg as UdtMessage).content())

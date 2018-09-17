@@ -4,6 +4,7 @@ import com.codahale.metrics.*
 import com.codahale.metrics.MetricRegistry.name
 import com.github.javafaker.Faker
 import com.temas.protocols.benchmark.Model
+import com.temas.protocols.benchmark.model.Generator
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
@@ -26,11 +27,16 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
     // properties
     private val MAX_USER_CNT: Int = 100
     private val METRICS_SLIDING_WINDOW_SEC: Long = 60
-    private val tps = Integer.parseInt(System.getProperty("tps", "30"))
+    private val tps = Integer.parseInt(System.getProperty("tps", "1500"))
     private val prototype = Model.GetUsersResponse.getDefaultInstance()
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private val group = buildEventLoopGroup()
     private val faker = Faker()
+    private val lostPacketCandidates = LinkedHashSet<Long>()
+
+    private var lastRecdId : Long = 0
+
+    var delayMicroSec: Long = ( (1f / tps.toFloat()) * 1_000_000).toLong()
 
     protected open fun buildEventLoopGroup() = NioEventLoopGroup()
 
@@ -57,17 +63,41 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
         return InetSocketAddress(host, port)
     }
 
-    val responseListener = object : ChannelInboundHandlerAdapter() {
+    private val responseListener = object : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             val readObject = (msg as Model.GetUsersResponse)
             val startTime = readObject.header.timestamp
             val count = readObject.userListCount
+            val seqNum = readObject.header.seqNum
             assert(count > 0)
             val latency = System.nanoTime() - startTime
             requestTimer.update(latency, TimeUnit.NANOSECONDS)
             slidingRequestTimer.update(latency, TimeUnit.NANOSECONDS)
             successRequestConter.inc()
+            inboundTrafficMeter.mark(readObject.serializedSize.toLong())
+
+            handleLostPackets(seqNum)
         }
+    }
+
+    private fun handleLostPackets(seqNum: Long) {
+        val iterator = lostPacketCandidates.iterator()
+        while (iterator.hasNext()) {
+            val oldSeqNo = iterator.next()
+            if (seqNum > oldSeqNo + 1000 / (delayMicroSec + 1)) {
+                iterator.remove()
+                lostPacketsConter.inc()
+                if (lostPacketsConter.count.rem(100) == 0L) {
+                    println("Number of lost packets = $oldSeqNo")
+                }
+            }
+        }
+
+        if (seqNum > lastRecdId + 1) {
+            lostPacketCandidates.addAll(lastRecdId until seqNum)
+        }
+
+        lastRecdId = seqNum
     }
 
     fun init() {
@@ -76,32 +106,54 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
             val remoteAddress = getRemoteAddress(host, port)
             val bootstrap = initBootstap(remoteAddress)
             val channelFuture = bootstrap.connect()
-            channelFuture.addListener({ future ->
+            channelFuture.addListener { future ->
                 if (!future.isSuccess) {
                     println("Error connecting to ${host} ${port}")
                 }
-            })
+            }
             val reqestId = AtomicLong(0)
             val channel = channelFuture.sync().channel()
+            printChannelOptions(channel)
+
+            // prepare request builders
+            val requestBuilder = Model.GetUsersRequest.newBuilder()
+            val headerBuilder = Model.Header.newBuilder()
+            // 1000 bytes is estimated packet size, 4 bytes is size of one element
+            val randomRequestData = Generator.randomRequestData(1000 / 4)
+            requestBuilder.addAllRandomData(randomRequestData)
+
+
             executor.scheduleAtFixedRate({
-                sendRequest(reqestId, channel, remoteAddress)
-            }, 0, (1f/ tps.toFloat() * 1000).toLong(), TimeUnit.MILLISECONDS)
+                sendRequest(reqestId, channel, randomRequestData, requestBuilder, headerBuilder)
+            }, 0, delayMicroSec, TimeUnit.MICROSECONDS)
+
             println("Client started to send requests to ${host}:${port} with reqested tps=${tps}")
-            metricsReporter.start(15, TimeUnit.SECONDS)
+            metricsReporter.start(10, TimeUnit.SECONDS)
 
         } catch(e: Exception) {
             e.printStackTrace()
         }
     }
 
-    private fun sendRequest(reqestId: AtomicLong, channel: Channel, toAddress: InetSocketAddress) {
+    fun printChannelOptions(channel: Channel) {
+        val sendBuffer = channel.config().getOption(ChannelOption.SO_SNDBUF)
+        val recvBuffer = channel.config().getOption(ChannelOption.SO_RCVBUF)
+        println("Send buffer = $sendBuffer, receive buffer = $recvBuffer")
+    }
+
+
+    private fun sendRequest(reqestId: AtomicLong, channel: Channel,
+                            randomRequestData : List<Int>,
+                            requestBuilder: Model.GetUsersRequest.Builder,
+                            headerBuilder: Model.Header.Builder) {
         val startTime = System.nanoTime()
-        val requestBuilder = Model.GetUsersRequest.newBuilder()
         val seqNum = reqestId.incrementAndGet()
-        requestBuilder.header = Model.Header.newBuilder().setSeqNum(seqNum).setTimestamp(startTime).build()
+        requestBuilder.header = headerBuilder.setSeqNum(seqNum).setTimestamp(startTime).build()
         //requestBuilder.count = faker.number().numberBetween(1, MAX_USER_CNT)
         requestBuilder.count = 25
-        channel.writeAndFlush(requestBuilder.build())
+        val request = requestBuilder.build()
+        channel.writeAndFlush(request)
+        outboundTrafficMeter.mark(request.serializedSize.toLong())
         totalRequestCounter.inc()
     }
 
@@ -122,15 +174,23 @@ abstract class Client<T: Channel> (protected val channelClass: Class<T>,
             Timer(SlidingTimeWindowArrayReservoir(METRICS_SLIDING_WINDOW_SEC, TimeUnit.SECONDS)))
     val totalRequestCounter = metricsRegistry.counter(name(javaClass, "request-counter"))
     val successRequestConter = metricsRegistry.counter(name(javaClass, "request-counter","success"))
-    val successRatio = metricsRegistry.register(name(javaClass,"success-ratio"),
+    val lostPacketsConter = metricsRegistry.counter(name(javaClass, "lost-packets"))
+    val lostRatio = metricsRegistry.register(name(javaClass,"lost-ratio"),
             object : RatioGauge() {
                 override fun getRatio(): Ratio {
-                    return Ratio.of(successRequestConter.count.toDouble(),
+                    return Ratio.of(lostPacketsConter.count.toDouble(),
                             totalRequestCounter.count.toDouble())
                 }
             })
+    val outboundTrafficMeter = metricsRegistry.meter(name(javaClass, "outbound-meter"))
+    val inboundTrafficMeter = metricsRegistry.meter(name(javaClass, "inbound-meter"))
+
     val metricsReporter = ConsoleReporter.forRegistry(metricsRegistry)
-            .convertDurationsTo(TimeUnit.MICROSECONDS).
-                    convertRatesTo(TimeUnit.SECONDS).build()
+            .convertDurationsTo(TimeUnit.MICROSECONDS)
+            .filter { name, _ -> !name.contains("-counter")}
+            .disabledMetricAttributes(setOf(MetricAttribute.M1_RATE,MetricAttribute.M5_RATE,
+                                            MetricAttribute.M15_RATE, MetricAttribute.MEAN, MetricAttribute.STDDEV))
+            .convertRatesTo(TimeUnit.SECONDS)
+            .build()
     // <<<<<<benchMark
 }

@@ -20,6 +20,7 @@ class TCPServer : Server() {
                 .childHandler(object : ChannelInitializer<NioSocketChannel>() {
                     override fun initChannel(ch: NioSocketChannel) {
                         val p = ch.pipeline()
+                        ch.config().recvByteBufAllocator = FixedRecvByteBufAllocator(5120)
                         appendDefaultHandlers(p)
                     }
                 })

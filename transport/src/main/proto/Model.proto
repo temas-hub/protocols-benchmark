@@ -9,7 +9,9 @@ message Header {
 message GetUsersRequest {
     Header header = 1;
     int32 count = 2;
+    repeated int32 randomData = 3;
 }
+
 
 
 message User {

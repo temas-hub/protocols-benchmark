@@ -28,6 +28,10 @@ object Generator {
         }
     }
 
+    fun randomRequestData(count : Int) : List<Int> {
+        return (1 .. count).map { faker.number().numberBetween(0, Int.MAX_VALUE)}
+    }
+
 }
 
 

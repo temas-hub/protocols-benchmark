@@ -23,6 +23,7 @@ object SctpServer: Server() {
                 .childHandler(object : ChannelInitializer<SctpChannel>() {
                     override fun initChannel(ch: SctpChannel) {
                         val p = ch.pipeline()
+                        ch.config().recvByteBufAllocator = FixedRecvByteBufAllocator(5120)
                         p.addLast("messageReader", object: ChannelInboundHandlerAdapter() {
                             override fun channelRead(ctx: ChannelHandlerContext, msg: Any?) {
                                 ctx.fireChannelRead((msg as SctpMessage).content())
